@@ -17,3 +17,5 @@ config
 .DS_Store
 Thumbs.db
 .vscode/
+# Terraform-generated artefacts
+build/
