@@ -32,3 +32,38 @@ resource "aws_lambda_function" "visit_counter" {
 
   depends_on = [aws_cloudwatch_log_group.visit_counter]
 }
+
+# --- Contact form function ---
+data "archive_file" "contact_form" {
+  type        = "zip"
+  source_file = "${path.module}/lambda/contact_form.py"
+  output_path = "${path.module}/build/contact_form.zip"
+}
+
+resource "aws_cloudwatch_log_group" "contact_form" {
+  name              = "/aws/lambda/portfolio-contact-form"
+  retention_in_days = 14
+}
+
+resource "aws_lambda_function" "contact_form" {
+  function_name    = "portfolio-contact-form"
+  role             = aws_iam_role.contact_form.arn
+  runtime          = "python3.13"
+  handler          = "contact_form.handler"
+  filename         = data.archive_file.contact_form.output_path
+  source_code_hash = data.archive_file.contact_form.output_base64sha256
+  timeout          = 10
+
+  environment {
+    variables = {
+      FROM_ADDRESS = "noreply@${aws_sesv2_email_identity.domain.email_identity}"
+      TO_ADDRESS   = "hello@${aws_sesv2_email_identity.domain.email_identity}"
+    }
+  }
+
+  tags = {
+    Project = "aws-serverless-backend"
+  }
+
+  depends_on = [aws_cloudwatch_log_group.contact_form]
+}

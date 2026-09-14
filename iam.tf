@@ -33,3 +33,27 @@ resource "aws_iam_role_policy_attachment" "visit_counter_logs" {
   role       = aws_iam_role.visit_counter.name
   policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
 }
+
+# --- Contact form role: may send email via SES, nothing else ---
+resource "aws_iam_role" "contact_form" {
+  name               = "contact-form-lambda-role"
+  assume_role_policy = data.aws_iam_policy_document.lambda_trust.json
+}
+
+data "aws_iam_policy_document" "contact_form_ses" {
+  statement {
+    actions   = ["ses:SendEmail"]
+    resources = [aws_sesv2_email_identity.domain.arn]
+  }
+}
+
+resource "aws_iam_role_policy" "contact_form_ses" {
+  name   = "contact-form-ses"
+  role   = aws_iam_role.contact_form.id
+  policy = data.aws_iam_policy_document.contact_form_ses.json
+}
+
+resource "aws_iam_role_policy_attachment" "contact_form_logs" {
+  role       = aws_iam_role.contact_form.name
+  policy_arn = "arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole"
+}

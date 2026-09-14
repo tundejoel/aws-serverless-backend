@@ -44,3 +44,25 @@ resource "aws_lambda_permission" "apigw_visit_counter" {
 output "api_url" {
   value = aws_apigatewayv2_stage.default.invoke_url
 }
+
+# --- Contact form: POST /contact ---
+resource "aws_apigatewayv2_integration" "contact_form" {
+  api_id                 = aws_apigatewayv2_api.backend.id
+  integration_type       = "AWS_PROXY"
+  integration_uri        = aws_lambda_function.contact_form.invoke_arn
+  payload_format_version = "2.0"
+}
+
+resource "aws_apigatewayv2_route" "contact" {
+  api_id    = aws_apigatewayv2_api.backend.id
+  route_key = "POST /contact"
+  target    = "integrations/${aws_apigatewayv2_integration.contact_form.id}"
+}
+
+resource "aws_lambda_permission" "apigw_contact_form" {
+  statement_id  = "AllowAPIGatewayInvoke"
+  action        = "lambda:InvokeFunction"
+  function_name = aws_lambda_function.contact_form.function_name
+  principal     = "apigateway.amazonaws.com"
+  source_arn    = "${aws_apigatewayv2_api.backend.execution_arn}/*/*"
+}
