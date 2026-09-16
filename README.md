@@ -7,6 +7,8 @@ AWS Lambda + API Gateway + DynamoDB + SES, all managed with Terraform.
 
 ## How it works
 
+![Architecture](docs_architecture.png)
+
 - `GET /visits` → Lambda does an atomic `ADD 1` on a DynamoDB item and returns the count; the page writes it into the footer.
 - `POST /contact` → Lambda validates `{name, email, message}`, then sends it via SES to my inbox with the visitor as Reply-To.
 
